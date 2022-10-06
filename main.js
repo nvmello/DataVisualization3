@@ -29,8 +29,6 @@ function initVars() {
 
 function createDonut(){
 
-    d3.select("svg").remove();
-
 // set the dimensions and margins of the graph
         const width = 580,
         height = 400,
@@ -39,34 +37,30 @@ function createDonut(){
         // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
         const radius = Math.min(width, height) / 2 - margin
 
-        // append the svg object to the div called 'my_dataviz'
-        const svg = d3.select("#pie_div")
+        // append the svg object to the div called 'pie_div'
+        const svg = d3.select("#pie_svg")
         .append("svg")
-        .attr('class', 'bg-svg')
         .attr("width", width)
         .attr("height", height)
         .append("g")
         .attr("transform", `translate(${width / 2},${height / 2})`);
 
         // Create dummy data
-        const data = {vowelData: vowelCount, consonantData: consonantCount, specialCharsData: specialCharCount}
+        const data = {Vowels: vowelCount, Consonants: consonantCount, Punctuation: specialCharCount}
 
         // set the color scale
         const color = d3.scaleOrdinal()
-        .range(["pink", "green", "blue"])
+        .range(["#D7A9E3FF", "#8BBEE8FF", "#A8D5BAFF"]);
 
         // Compute the position of each group on the pie:
         const pie = d3.pie()
             .value(d=>d[1])
-
+    
         const data_ready = pie(Object.entries(data))
-    var tooltip = d3.select("body")
-        .append("div")
-        .style("position", "absolute")
-        .style("z-index", "10")
-        .style("visibility", "hidden")
-        .style("background", "#000")
-        .text("a simple tooltip");
+        var div = d3.select("body").append("div")
+        .attr("class", "tooltip-donut")
+        .style("opacity", 0);
+
         // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
         svg
         .selectAll('whatever')
@@ -75,12 +69,66 @@ function createDonut(){
         .attr('d', d3.arc()
             .innerRadius(100)         // This is the size of the donut hole
             .outerRadius(radius))
-        .attr('fill', d => color(d.data[0]))
+        .attr('fill', d => color(d))
         .attr("stroke", "black")
         .style("stroke-width", "2px")
-        .style("opacity", 0.7)
-            .on("mouseover", function (d) { console.log("HOVERING") })
+        .style('opacity', '1')
+            .on('mouseover', function (d) {
+                svg.append('text')
+                    .style("text-anchor", "middle")
+                    .attr("class", "textCenter")
+                    .text(d.target.__data__.data[0] + ": " + d.target.__data__.data[1])
+                d3.select(this).transition()
+                    .style("stroke-width", "4px")
+                    
+            })
+            .on("click", function (d) {
+                
+                drawBar(d3.select(this).style('fill'));
+                    })
+            .on('mouseout', function (d) {
+                d3.select(".textCenter")
+                    .remove()
+                d3.select(this).transition()
+                    .style("stroke-width", "2px");
+            });
+}
 
+function drawBar(color) {  
+    console.log(color)
+    data = consonants;
+    let margin = 30;
+    const svg = d3.select("#bar_svg");
+    let width = 580 - margin;
+    console.log("width: " + width)
+    let height = 400 - margin; 
+    console.log("height: " + height)
+    
+
+    var xScale = d3.scaleBand().range([0, width-margin]).padding(0.5); 
+    var yScale = d3.scaleLinear().range([height, margin]); 
+    var g = svg.append("g")
+        // .attr("transform", `translate(${margin},${height})`);
+
+    xScale.domain(data.map(function (d) {
+        return d;
+    }));
+
+    yScale.domain([
+        0,
+        d3.max(map1, function (d) {
+            return d[1];
+        }),
+    ]);
+
+    g.append("g")
+        .attr("transform", `translate(${margin},${height})`)
+        .call(d3.axisBottom(xScale)) 
+
+    g.append("g")
+        .attr("transform", `translate(${margin},${0})`)
+        .call(d3.axisLeft(yScale)) 
+   
 }
 
 
@@ -112,16 +160,11 @@ function parseText( inputStr ){
     console.log(inputStr);
 }
 
-
-
 function submitText(){
+    d3.selectAll("svg > *").remove();
     initVars();
     var textarea = document.getElementById('wordbox');
     parseText(textarea.value);
     console.log(map1);
     createDonut();
 }
-
-
-
-
