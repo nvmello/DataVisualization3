@@ -169,7 +169,10 @@ function drawBar(data, color) {
             div.html(barData)
                 .style("left", (d.pageX) + "px")
                 .style("top", (d.pageY) + "px");
-            
+
+            let extraCredit = (i + ' : ' + map1.get(i));
+
+            d3.select("#character-name").text(extraCredit)
                 
             // div.html(count)
             //     .style("left", (x + 10) + "px")
@@ -224,3 +227,6 @@ function submitText(){
     console.log(map1);
     createDonut();
 }
+
+
+
