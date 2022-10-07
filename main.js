@@ -77,14 +77,15 @@ function createDonut(){
                 svg.append('text')
                     .style("text-anchor", "middle")
                     .attr("class", "textCenter")
+                
                     .text(d.target.__data__.data[0] + ": " + d.target.__data__.data[1])
-                d3.select(this).transition()
+                    d3.select(this).transition()
                     .style("stroke-width", "4px")
                     
             })
             .on("click", function (d) {
-                
-                drawBar(d3.select(this).style('fill'));
+                d3.selectAll("#bar_svg > *").remove();
+                drawBar(d.target.__data__.data[0] , d3.select(this).style('fill'));
                     })
             .on('mouseout', function (d) {
                 d3.select(".textCenter")
@@ -94,15 +95,18 @@ function createDonut(){
             });
 }
 
-function drawBar(color) {  
-    console.log(color)
-    data = consonants;
+function drawBar(data, color) {  
+    if(data.toLowerCase() === "vowels"){
+        data = vowels;
+    } else if (data.toLowerCase() === "consonants"){
+        data = consonants;
+    } else if (data.toLowerCase() === "punctuation") {
+        data = specialChars;
+    }
     let margin = 30;
     const svg = d3.select("#bar_svg");
     let width = 580 - margin;
-    console.log("width: " + width)
     let height = 400 - margin; 
-    console.log("height: " + height)
     
 
     var xScale = d3.scaleBand().range([0, width-margin]).padding(0.5); 
@@ -128,6 +132,58 @@ function drawBar(color) {
     g.append("g")
         .attr("transform", `translate(${margin},${0})`)
         .call(d3.axisLeft(yScale)) 
+
+    var div = d3.select("#bar_div")
+        .append("div")
+        .attr("class", "tooltip-bar");
+
+
+    var bar = g.selectAll(".bar")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function (d) {
+            return xScale(d) + margin;
+        })
+        .attr("y", function (d) {
+            return yScale(map1.get(d));
+        })
+        .attr("width", xScale.bandwidth())
+        .attr("height", function (d) {
+            return height - yScale(map1.get(d));
+        })
+        .style("fill", color)
+        .attr("stroke", "black")
+        .style("stroke-width", "1px")
+        .on('mouseover', function (d, i) {
+       
+            d3.select(this).transition()
+                .duration('50')
+                .attr('opacity', '.85');
+            div.transition()
+                .duration(50)
+                .style("opacity", 1);
+            let barData = ('Character: ' + i + '<br/>' + 'Count: ' + map1.get(i));
+           
+            div.html(barData)
+                .style("left", (d.pageX) + "px")
+                .style("top", (d.pageY) + "px");
+            
+                
+            // div.html(count)
+            //     .style("left", (x + 10) + "px")
+            //     .style("top", (y - 30) + "px");
+        })
+        .on('mouseout', function (d, i) {
+            d3.select(this).transition()
+                .duration('50')
+                .attr('opacity', '1');
+            div.transition()
+                .duration('50')
+                .style("opacity", 0);
+        });
+
    
 }
 
